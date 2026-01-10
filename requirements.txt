@@ -1,6 +1,5 @@
 streamlit
 openai
-google-generativeai
 python-dotenv
 tiktoken
 tenacity
