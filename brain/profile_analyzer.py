@@ -4,50 +4,69 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-# Load keys from .env file
+# Load environment variables from .env
 load_dotenv()
 
 class ProfileAnalyzer:
-    """Class to handle the AI analysis of LinkedIn profiles."""
+    """
+    Core engine to analyze LinkedIn profiles using OpenAI GPT models.
+    Supports English, Arabic, and French.
+    """
     
     def __init__(self):
-        # Retrieve the API Key from environment variables
+        # Securely get the API key
         self.api_key = os.getenv("OPENAI_API_KEY")
         if not self.api_key:
-            raise ValueError("ERROR: OPENAI_API_KEY is missing in .env")
+            raise ValueError("CRITICAL ERROR: OPENAI_API_KEY is not set in .env file.")
         
-        # Initialize OpenAI Client
         self.client = OpenAI(api_key=self.api_key)
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=6))
     def analyze_profile(self, profile_text: str) -> dict:
         """
-        Analyzes profile content and returns a JSON report.
-        Includes retry logic to handle API timeouts or errors.
+        Processes the profile text and returns a structured JSON report.
+        The response language will match the input language automatically.
         """
         if not profile_text.strip():
-            return {"error": "The input text is empty. Please provide content."}
+            return {"error": "Input text is empty. Please provide profile content."}
 
-        # The prompt defines how the AI should behave
-        system_prompt = "You are an expert LinkedIn Optimizer. Analyze the profile and return ONLY a valid JSON object."
-        user_prompt = f"Analyze this LinkedIn profile text. Provide a score (0-100), summary, 3 strengths, 3 weaknesses, and 3 actionable tips:\n\n{profile_text}"
+        # System instructions to ensure multilingual support and JSON format
+        system_msg = (
+            "You are an expert LinkedIn Profile Auditor and Career Coach. "
+            "You must detect the language of the input (English, Arabic, or French) "
+            "and provide the entire analysis in that SAME language. "
+            "Return ONLY a valid JSON object."
+        )
+        
+        user_msg = f"""
+        Analyze the following LinkedIn profile content:
+        ---
+        {profile_text}
+        ---
+        Provide a comprehensive report in JSON format with these exact keys:
+        1. "score": (Integer between 0-100)
+        2. "summary": (A brief professional overview)
+        3. "strengths": (A list of 3 key strengths found)
+        4. "weaknesses": (A list of 3 areas for improvement)
+        5. "actionable_tips": (A list of 3 specific steps to boost profile visibility)
+        """
 
         try:
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini", # Cost-effective and fast
+                model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
+                    {"role": "system", "content": system_msg},
+                    {"role": "user", "content": user_msg}
                 ],
-                response_format={"type": "json_object"} # Guarantees a clean JSON output
+                response_format={"type": "json_object"}
             )
             
-            # Extract and parse the JSON string from the response
+            # Parse the string response into a Python dictionary
             return json.loads(response.choices[0].message.content)
             
         except Exception as e:
-            return {"error": f"AI process failed: {str(e)}"}
+            return {"error": f"AI Analysis failed: {str(e)}"}
 
-# Local Test: This part runs only if you execute this file directly
 if __name__ == "__main__":
-    print("Testing ProfileAnalyzer logic...")
+    # Internal module test
+    print("ProfileAnalyzer module ready.")
