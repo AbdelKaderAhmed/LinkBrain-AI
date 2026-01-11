@@ -5,13 +5,14 @@ import os
 # Import custom modules from the brain folder
 from brain.profile_analyzer import ProfileAnalyzer
 from brain.post_generator import PostGenerator
+from brain.skills_advisor import SkillAdvisor
 
 # Load environment variables (API Keys)
 load_dotenv()
 
 # 1. Page Configuration
 st.set_page_config(
-    page_title="LinkBrain AI | Professional LinkedIn Assistant",
+    page_title="LinkBrain AI | Your LinkedIn Career Partner",
     page_icon="🧠",
     layout="wide"
 )
@@ -54,7 +55,6 @@ if app_mode == "Profile Optimizer":
         if profile_input:
             with st.spinner("LinkBrain is auditing your profile..."):
                 try:
-                    # Initialize the analyzer engine
                     analyzer = ProfileAnalyzer()
                     result = analyzer.analyze_profile(profile_input)
                     
@@ -62,8 +62,6 @@ if app_mode == "Profile Optimizer":
                         st.error(result["error"])
                     else:
                         st.success("Analysis Complete!")
-                        
-                        # Score and Summary Display
                         col_score, col_sum = st.columns([1, 3])
                         with col_score:
                             st.metric("Profile Score", f"{result['score']}/100")
@@ -72,8 +70,6 @@ if app_mode == "Profile Optimizer":
                             st.write(result['summary'])
                         
                         st.markdown("---")
-                        
-                        # Detailed Analysis
                         col_left, col_right = st.columns(2)
                         with col_left:
                             st.subheader("✅ Strengths")
@@ -96,7 +92,6 @@ elif app_mode == "Post Generator":
     st.markdown("<h1 class='main-title'>✍️ AI Content Creator</h1>", unsafe_allow_html=True)
     st.write("Generate high-engagement LinkedIn posts in seconds.")
     
-    # Input Layout
     col_input1, col_input2 = st.columns(2)
     with col_input1:
         topic = st.text_input("What is the post about?", placeholder="e.g., Lessons learned from my coding bootcamp")
@@ -108,14 +103,10 @@ elif app_mode == "Post Generator":
         if topic:
             with st.spinner("Drafting your post..."):
                 try:
-                    # Initialize the generator engine
                     gen = PostGenerator()
                     post_content = gen.generate_post(topic, tone, language)
-                    
                     st.markdown("---")
                     st.subheader("Generated Content:")
-                    
-                    # Apply RTL class if Arabic is selected
                     dir_class = "rtl-text" if language == "Arabic" else ""
                     st.markdown(f'<div class="{dir_class}">{post_content}</div>', unsafe_allow_html=True)
                 except Exception as e:
@@ -123,15 +114,57 @@ elif app_mode == "Post Generator":
         else:
             st.warning("Please provide a topic first.")
 
-# --- FEATURE 3: SKILL ADVISOR (Placeholder) ---
+# --- FEATURE 3: SKILL ADVISOR ---
 elif app_mode == "Skill Advisor":
-    st.header("📊 Market Skill Advisor")
-    st.info("This feature is under development. It will soon help you identify skill gaps in your industry.")
-# Custom Footer with your name
+    st.markdown("<h1 class='main-title'>📊 Market Skill Advisor</h1>", unsafe_allow_html=True)
+    st.write("Identify your skill gaps and get a personalized learning roadmap.")
+    
+    col_a, col_b = st.columns(2)
+    with col_a:
+        role = st.text_input("Target Job Role:", placeholder="e.g., Data Scientist")
+    with col_b:
+        lang = st.selectbox("Response Language:", ["English", "Arabic", "French"])
+        
+    skills_input = st.text_area("List your current skills (separated by commas):", placeholder="Python, SQL, Teamwork...")
+
+    if st.button("Get Career Roadmap 🚀"):
+        if role and skills_input:
+            with st.spinner("Calculating your skill gap..."):
+                try:
+                    advisor = SkillAdvisor()
+                    report = advisor.analyze_skills(skills_input, role, lang)
+                    
+                    if "error" in report:
+                        st.error(report["error"])
+                    else:
+                        st.success("Your Career Strategy is Ready!")
+                        dir_class = "rtl-text" if lang == "Arabic" else ""
+                        st.markdown(f'<div class="{dir_class}">', unsafe_allow_html=True)
+                        st.subheader(f"Gap Analysis for {role}")
+                        st.info(report['gap_analysis'])
+                        
+                        c1, c2 = st.columns(2)
+                        with c1:
+                            st.subheader("🛠 Technical Skills")
+                            for ts in report['tech_skills']: st.write(f"- {ts}")
+                        with c2:
+                            st.subheader("🤝 Soft Skills")
+                            for ss in report['soft_skills']: st.write(f"- {ss}")
+                        
+                        st.markdown("---")
+                        st.subheader("📅 3-Month Roadmap")
+                        st.success(report['roadmap'])
+                        st.markdown('</div>', unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Advisor module error: {e}")
+        else:
+            st.warning("Please fill in both the role and your current skills.")
+
+# --- CUSTOM FOOTER ---
 st.sidebar.markdown("---")
 st.sidebar.markdown(
     "<div style='text-align: center; color: #888888;'>"
-    "Created by <b> Abdel Kader Ahmed</b>"
+    "Created by <b>Abdel Kader Ahmed </b>"
     "</div>", 
     unsafe_allow_html=True
 )
