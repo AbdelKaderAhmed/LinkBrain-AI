@@ -1,26 +1,40 @@
 import streamlit as st
-from dotenv import load_dotenv
-import os
+from brain.profile_analyzer import ProfileAnalyzer # Import your logic
 
-# Load environment variables (API Keys)
-load_dotenv()
-
-# Page configuration
-st.set_page_config(page_title="LinkBrain AI", page_icon="🧠", layout="wide")
+st.set_page_config(page_title="LinkBrain AI", layout="wide")
 
 st.title("🧠 LinkBrain AI")
-st.markdown("---")
 
-# Sidebar for navigation
-st.sidebar.title("Navigation")
-app_mode = st.sidebar.selectbox("Choose a tool:", ["Profile Optimizer", "Post Generator", "Skill Advisor"])
+# Sidebar
+st.sidebar.header("Control Panel")
+option = st.sidebar.selectbox("Select Tool", ["Profile Optimizer"])
 
-if app_mode == "Profile Optimizer":
-    st.header("🔍 LinkedIn Profile Optimizer")
-    profile_input = st.text_area("Paste your LinkedIn 'About' or 'Experience' section here:", height=200)
-    
-    if st.button("Analyze Profile"):
-        if profile_input:
-            st.write("🔄 Analysis in progress... (Waiting for Brain module)")
+if option == "Profile Optimizer":
+    st.subheader("🔍 Profile Optimization Engine")
+    user_input = st.text_area("Paste your LinkedIn About/Experience here:", height=200)
+
+    if st.button("Start Analysis"):
+        if user_input:
+            with st.spinner("Analyzing... please wait."):
+                # 1. Initialize the analyzer
+                analyzer = ProfileAnalyzer()
+                # 2. Get the result
+                result = analyzer.analyze_profile(user_input)
+                
+                if "error" in result:
+                    st.error(result["error"])
+                else:
+                    # 3. Display Results in UI
+                    st.metric("Profile Score", f"{result['score']}/100")
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.success("### Strengths")
+                        for s in result['strengths']: st.write(f"- {s}")
+                    with col2:
+                        st.warning("### Weaknesses")
+                        for w in result['weaknesses']: st.write(f"- {w}")
+                    
+                    st.info(f"**Summary:** {result['summary']}")
         else:
-            st.warning("Please paste some text first!")
+            st.error("Input cannot be empty!")

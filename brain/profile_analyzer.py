@@ -4,35 +4,50 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from tenacity import retry, stop_after_attempt, wait_exponential
 
+# Load keys from .env file
 load_dotenv()
 
 class ProfileAnalyzer:
-    """Analyzes LinkedIn profiles using OpenAI models with professional clean code."""
+    """Class to handle the AI analysis of LinkedIn profiles."""
     
     def __init__(self):
+        # Retrieve the API Key from environment variables
         self.api_key = os.getenv("OPENAI_API_KEY")
         if not self.api_key:
-            raise ValueError("API Key missing! Please check your .env file.")
+            raise ValueError("ERROR: OPENAI_API_KEY is missing in .env")
+        
+        # Initialize OpenAI Client
         self.client = OpenAI(api_key=self.api_key)
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=6))
-    def analyze_profile(self, text: str) -> dict:
-        """Sends profile text to OpenAI and returns a structured JSON report."""
-        if not text.strip():
-            return {"error": "Input text is empty."}
+    def analyze_profile(self, profile_text: str) -> dict:
+        """
+        Analyzes profile content and returns a JSON report.
+        Includes retry logic to handle API timeouts or errors.
+        """
+        if not profile_text.strip():
+            return {"error": "The input text is empty. Please provide content."}
 
-        # Clear English comments for logic
-        # Sending request to GPT-4o-mini for cost-effective analysis
-        response = self.client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are an expert LinkedIn Career Coach. Return JSON only."},
-                {"role": "user", "content": f"Analyze this profile and score it (0-100). Provide strengths, weaknesses, and 3 tips:\n\n{text}"}
-            ],
-            response_format={"type": "json_object"}
-        )
-        return json.loads(response.choices[0].message.content)
+        # The prompt defines how the AI should behave
+        system_prompt = "You are an expert LinkedIn Optimizer. Analyze the profile and return ONLY a valid JSON object."
+        user_prompt = f"Analyze this LinkedIn profile text. Provide a score (0-100), summary, 3 strengths, 3 weaknesses, and 3 actionable tips:\n\n{profile_text}"
 
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini", # Cost-effective and fast
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                response_format={"type": "json_object"} # Guarantees a clean JSON output
+            )
+            
+            # Extract and parse the JSON string from the response
+            return json.loads(response.choices[0].message.content)
+            
+        except Exception as e:
+            return {"error": f"AI process failed: {str(e)}"}
+
+# Local Test: This part runs only if you execute this file directly
 if __name__ == "__main__":
-    # Quick local test
-    print("Testing ProfileAnalyzer...")
+    print("Testing ProfileAnalyzer logic...")
