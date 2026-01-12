@@ -6,6 +6,7 @@ import os
 from brain.profile_analyzer import ProfileAnalyzer
 from brain.post_generator import PostGenerator
 from brain.skills_advisor import SkillAdvisor
+from brain.network_advisor import NetworkAdvisor
 
 # Import the PDF utility from the utils folder
 from utils.pdf_exporter import PDFReport
@@ -45,7 +46,11 @@ st.markdown("""
 
 # 3. Sidebar Navigation
 st.sidebar.markdown("<h2 style='text-align: center;'>🧠 LinkBrain Menu</h2>", unsafe_allow_html=True)
-app_mode = st.sidebar.selectbox("Select a Tool:", ["Profile Optimizer", "Post Generator", "Skill Advisor"])
+
+# Corrected selectbox to include the fourth option
+app_mode = st.sidebar.selectbox("Select a Tool:", 
+    ["Profile Optimizer", "Post Generator", "Skill Advisor", "Networking Recommendations"]
+)
 
 # --- FEATURE 1: PROFILE OPTIMIZER ---
 if app_mode == "Profile Optimizer":
@@ -131,7 +136,6 @@ elif app_mode == "Skill Advisor":
                     st.subheader(f"Analysis for {role}")
                     st.info(report['gap_analysis'])
                     
-                    # Technical & Soft Skills
                     c1, c2 = st.columns(2)
                     with c1:
                         st.subheader("🛠 Technical")
@@ -145,8 +149,6 @@ elif app_mode == "Skill Advisor":
                     st.write(report['roadmap'])
                     st.markdown('</div>', unsafe_allow_html=True)
 
-                    # --- PDF DOWNLOAD SECTION ---
-                    # Note: Only for English/French to avoid encoding errors without custom fonts
                     if lang != "Arabic":
                         try:
                             pdf_tool = PDFReport()
@@ -160,9 +162,38 @@ elif app_mode == "Skill Advisor":
                         except Exception as e:
                             st.error(f"PDF Generation failed: {e}")
                     else:
-                        st.warning("PDF export is currently available for English and French only.")
+                        st.warning("PDF export is available for English and French only.")
         else:
             st.warning("Fill in all fields.")
+
+# --- FEATURE 4: NETWORKING RECOMMENDATIONS (Corrected Logic) ---
+elif app_mode == "Networking Recommendations":
+    st.markdown("<h1 class='main-title'>🌐 LinkedIn Networking Advisor</h1>", unsafe_allow_html=True)
+    st.info("Find industry leaders to expand your professional network.")
+    
+    user_input = st.text_area("Paste a job description or your bio to find the right people:", height=200)
+    
+    if st.button("Generate Recommendations"):
+        if user_input:
+            with st.spinner("Searching for industry experts..."):
+                advisor = NetworkAdvisor()
+                results = advisor.get_recommendations(user_input)
+                
+                if "error" in results:
+                    st.error(results["error"])
+                else:
+                    st.success(f"Top leaders in {results.get('target_niche', 'your field')}")
+                    
+                    for person in results.get("recommendations", []):
+                        if "|" in person:
+                            name, link, reason = person.split("|")
+                            with st.container():
+                                st.markdown(f"### 👤 {name.strip()}")
+                                st.write(f"💡 **Why follow:** {reason.strip()}")
+                                st.markdown(f"[🔗 View LinkedIn Profile]({link.strip()})")
+                                st.divider()
+        else:
+            st.warning("Please provide some text to analyze.")
 
 # --- CUSTOM FOOTER ---
 st.sidebar.markdown("---")
