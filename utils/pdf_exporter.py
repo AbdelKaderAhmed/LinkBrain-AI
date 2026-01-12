@@ -1,5 +1,5 @@
 from fpdf import FPDF
-
+import os
 class PDFReport(FPDF):
     """
     Ultra-stable layout: Forces X-coordinate reset to prevent horizontal drifting.
@@ -13,11 +13,24 @@ class PDFReport(FPDF):
         self.set_font("Helvetica", size=12)
 
     def header(self):
-        """Standard Header with explicit X reset."""
-        self.set_x(20) # Force start at left margin
-        self.set_font('Helvetica', 'B', 15)
-        self.cell(170, 10, 'LinkBrain AI - Career Report', align='C', new_x="LMARGIN", new_y="NEXT")
-        self.ln(10)
+        """Header with the LinkBrain logo and professional title."""
+        # 1. Look for the logo file
+        if os.path.exists("logo.png"):
+            # Positioning the LinkBrain logo (x=20, y=12, width=30)
+            self.image("logo.png", 20, 12, 30) 
+            # Move text cursor to the right so it doesn't overlap with the logo
+            self.set_x(55) 
+        else:
+            self.set_x(20)
+
+        # 2. Add the Title with LinkBrain Blue
+        self.set_font('Helvetica', 'B', 16)
+        self.set_text_color(10, 102, 194) # LinkBrain Blue
+        self.cell(135, 10, 'LinkBrain AI - Career Intelligence', align='L', new_x="LMARGIN", new_y="NEXT")
+        
+        # Reset color to black
+        self.set_text_color(0, 0, 0)
+        self.ln(12)
 
     def generate_career_pdf(self, role, data):
         """
