@@ -11,6 +11,8 @@ from brain.network_advisor import NetworkAdvisor
 # Import the PDF utility from the utils folder
 from utils.pdf_exporter import PDFReport
 
+# Import the new CareerCoach class from the brain folder
+from brain.career_coach import CareerCoach
 # Load environment variables
 load_dotenv()
 
@@ -198,6 +200,82 @@ if completed == 3:
 elif completed > 0:
     st.sidebar.info(f"Complete {3-completed} more sections to unlock the Master Report.")
 
+# --- PROFESSIONAL FLOATING-STYLE CHATBOT ---
+
+# 1. Custom CSS to fix the chat to the bottom and style it like a professional widget
+st.markdown("""
+    <style>
+    /* Main Chat Container */
+    .stChatFloating {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 350px;
+        z-index: 1000;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        border: 1px solid #e0e0e0;
+    }
+    /* Header Styling */
+    .chat-header {
+        background: #0a66c2;
+        color: white;
+        padding: 12px;
+        border-radius: 15px 15px 0 0;
+        font-weight: bold;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# 2. Using an Expander at the bottom of the main page to simulate a "Pop-up"
+# We place it inside a column to push it to the right
+col1, col2 = st.columns([2, 1])
+
+with col2:
+    with st.expander("🧠 LinkBrain Assistant", expanded=False):
+        st.markdown("<div class='chat-header'>🧠 Executive AI Coach</div>", unsafe_allow_html=True)
+        
+        # Initialize session state for messages
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
+
+        # Chat display area with fixed height
+        chat_box = st.container(height=350)
+
+        # Show message history
+        for msg in st.session_state.messages:
+            avatar = "👤" if msg["role"] == "user" else "🧠"
+            with chat_box.chat_message(msg["role"], avatar=avatar):
+                st.markdown(msg["content"])
+
+        # Chat Input
+        if chat_input := st.chat_input("Type your message..."):
+            # Add user message
+            st.session_state.messages.append({"role": "user", "content": chat_input})
+            with chat_box.chat_message("user", avatar="👤"):
+                st.markdown(chat_input)
+
+            # AI Response Logic
+            with st.spinner("Analyzing..."):
+                context = st.session_state.get('master_data', {}).get('profile')
+                coach = CareerCoach()
+                response = coach.get_response(st.session_state.messages, context_data=context)
+            
+            # Add AI message
+            st.session_state.messages.append({"role": "assistant", "content": response})
+            with chat_box.chat_message("assistant", avatar="🧠"):
+                st.markdown(response)
+        
+        # Reset Button inside the chat for convenience
+        if st.button("Clear Conversation", use_container_width=True):
+            st.session_state.messages = []
+            st.rerun()
 # Footer
 st.sidebar.markdown("---")
 st.sidebar.markdown("<div style='text-align: center; color: #888;'>Created by <b>Abdel Kader Ahmed</b></div>", unsafe_allow_html=True)
