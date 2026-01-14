@@ -36,121 +36,89 @@ class PDFReport(FPDF):
         self.line(self.get_x() + 10, self.get_y(), self.get_x() + 180, self.get_y())
         self.ln(5)
 
-    def generate_career_pdf(self, role, data):
-        """
-        Generates a standard single-tool report (e.g., Skill Advisor roadmap).
-        """
-        self.add_page()
-        safe_width = 170
-
-        # Title Section
-        self.set_font('Helvetica', 'B', 16)
-        self.set_text_color(0, 0, 0)
-        self.cell(0, 10, f"Career Roadmap: {role}", ln=True)
-        self.ln(5)
-
-        for key, value in data.items():
-            if key == "error": continue
-            
-            # Format keys for headers
-            self._draw_section_title(key.replace('_', ' ').capitalize())
-            
-            self.set_text_color(0, 0, 0)
-            self.set_font('Helvetica', '', 11)
-
-            if isinstance(value, list):
-                for item in value:
-                    # Clean text for Latin-1 compatibility
-                    clean_item = str(item).encode('latin-1', 'ignore').decode('latin-1')
-                    self.multi_cell(safe_width, 8, txt=f"- {clean_item}")
-            else:
-                clean_text = str(value).encode('latin-1', 'ignore').decode('latin-1')
-                self.multi_cell(safe_width, 8, txt=clean_text)
-            
-            self.ln(5)
-
-        return bytes(self.output())
-
     def generate_master_report(self, data_bundle):
-        """
-        Assembles data from all brain modules into one comprehensive PDF with Logo.
-        """
+        self.set_margins(20, 20, 20)
+        self.set_auto_page_break(auto=True, margin=20)
         self.add_page()
-        safe_width = 175
-        role = data_bundle.get('role', 'Professional')
+        effective_width = 170 
+        
+        def clean(text):
+            return str(text).encode('latin-1', 'ignore').decode('latin-1')
 
-        # --- Logo Section ---
-        # Note: Ensure 'logo.png' exists in your root or assets folder
+        # --- Header ---
         logo_path = "logo.png" 
         if os.path.exists(logo_path):
-            # Placing the logo at the top left (x=10, y=10) with width=30
-            self.image(logo_path, x=10, y=10, w=30)
-            self.ln(15) # Add space after logo
-        else:
-            # Fallback if logo is missing to avoid crashing
-            self.ln(10)
+            self.image(logo_path, x=20, y=10, w=20)
+            self.ln(18)
+        
+        self.set_font('Helvetica', 'B', 18)
+        self.set_text_color(10, 102, 194) 
+        self.cell(0, 10, clean("Master Career Intelligence Report"), ln=True, align='C')
+        self.ln(5)
 
-        # --- Report Cover ---
-        self.set_font('Helvetica', 'B', 24)
-        self.set_text_color(10, 102, 194) # LinkedIn Blue
-        self.cell(0, 20, "Master Career Intelligence Report", ln=True, align='C')
         # --- Section 1: Profile Audit ---
         if data_bundle.get('profile'):
             self._draw_section_title("I. Profile Audit & Analysis")
             profile = data_bundle['profile']
-            
-            self.set_font('Helvetica', 'B', 12)
-            self.set_text_color(0, 0, 0)
-            self.cell(0, 10, f"Overall Profile Score: {profile.get('score', 'N/A')}/100", ln=True)
-            
+            self.set_font('Helvetica', 'B', 11); self.set_text_color(0, 0, 0)
+            self.cell(0, 8, f"Score: {profile.get('score', 0)}/100", ln=True)
             self.set_font('Helvetica', '', 11)
-            summary = str(profile.get('summary', '')).encode('latin-1', 'ignore').decode('latin-1')
-            self.multi_cell(safe_width, 7, txt=summary)
+            self.multi_cell(effective_width, 7, txt=clean(profile.get('summary', '')))
             
-            self.ln(5)
-            self.set_font('Helvetica', 'B', 11)
-            self.cell(0, 8, "Key Strengths:", ln=True)
+            # Strengths
+            self.ln(2); self.set_font('Helvetica', 'B', 11); self.cell(0, 8, "Key Strengths:", ln=True)
             self.set_font('Helvetica', '', 11)
             for s in profile.get('strengths', []):
-                self.multi_cell(safe_width, 7, txt=f"- {str(s).encode('latin-1', 'ignore').decode('latin-1')}")
+                self.set_x(20); self.multi_cell(effective_width, 6, txt=f"- {clean(s)}"); self.ln(1)
 
-        # --- Section 2: Skills & Roadmap ---
+        # --- Section 2: Career Roadmap (FIXED) ---
         if data_bundle.get('roadmap'):
-            self._draw_section_title("II. Career Roadmap & Gap Analysis")
-            roadmap = data_bundle['roadmap']
+            self._draw_section_title("II. Career Roadmap")
+            roadmap_data = data_bundle['roadmap']
             
+            # Logic to handle if roadmap is a dictionary (like in your screenshot)
             self.set_font('Helvetica', '', 11)
-            self.set_text_color(0, 0, 0)
-            gap_text = str(roadmap.get('gap_analysis', '')).encode('latin-1', 'ignore').decode('latin-1')
-            self.multi_cell(safe_width, 7, txt=gap_text)
+            raw_roadmap = roadmap_data.get('roadmap', '')
             
-            self.ln(5)
-            self.set_font('Helvetica', 'B', 11)
-            self.cell(0, 8, "Target Skills to Acquire:", ln=True)
-            self.set_font('Helvetica', '', 11)
-            for skill in roadmap.get('tech_skills', []):
-                self.multi_cell(safe_width, 7, txt=f"* {str(skill).encode('latin-1', 'ignore').decode('latin-1')}")
-
-        # --- Section 3: Networking ---
-        if data_bundle.get('networking'):
-            self._draw_section_title("III. Networking Strategy")
-            recommendations = data_bundle['networking'].get('recommendations', [])
-            
-            self.set_font('Helvetica', '', 11)
-            self.set_text_color(0, 0, 0)
-            self.multi_cell(safe_width, 7, txt="Follow these industry leaders to expand your network:")
-            self.ln(3)
-
-            for person in recommendations:
-                if "|" in person:
-                    name, link, reason = person.split("|")
+            if isinstance(raw_roadmap, dict):
+                for month, details in raw_roadmap.items():
                     self.set_font('Helvetica', 'B', 11)
-                    self.write(8, f"- {name.strip()}: ")
+                    self.cell(0, 8, clean(month), ln=True)
                     self.set_font('Helvetica', '', 11)
-                    self.set_text_color(0, 0, 255)
-                    self.write(8, "View Profile", link=link.strip())
-                    self.set_text_color(0, 0, 0)
-                    self.write(8, f" | {reason.strip()}")
-                    self.ln(10)
+                    # If details is a dict, extract Objective and Actions
+                    if isinstance(details, dict):
+                        obj = details.get('Objective', '')
+                        actions = details.get('Actions', [])
+                        self.multi_cell(effective_width, 6, txt=clean(f"Objective: {obj}"))
+                        if isinstance(actions, list):
+                            for action in actions:
+                                self.set_x(25) # Indent actions
+                                self.multi_cell(effective_width - 5, 6, txt=clean(f"* {action}"))
+                    else:
+                        self.multi_cell(effective_width, 6, txt=clean(str(details)))
+                    self.ln(2)
+            else:
+                self.multi_cell(effective_width, 7, txt=clean(str(raw_roadmap)))
+
+        # --- Section 3: Networking (FIXED) ---
+        if data_bundle.get('networking'):
+            self._draw_section_title("III. Strategic Networking")
+            net_data = data_bundle['networking']
+            # Try to find the list of people in common keys like 'recommendations' or 'people'
+            people = net_data.get('recommendations', []) or net_data.get('people', [])
+            
+            if people:
+                for person in people:
+                    self.set_x(20)
+                    if "|" in str(person):
+                        name, link, reason = str(person).split("|")
+                        self.set_font('Helvetica', 'B', 11); self.write(7, f"- {clean(name.strip())}: ")
+                        self.set_font('Helvetica', '', 11); self.set_text_color(0, 0, 255)
+                        self.write(7, "View Profile", link=link.strip())
+                        self.set_text_color(0, 0, 0); self.write(7, f" | {clean(reason.strip())}")
+                    else:
+                        self.set_font('Helvetica', '', 11)
+                        self.multi_cell(effective_width, 6, txt=f"- {clean(person)}")
+                    self.ln(8)
 
         return bytes(self.output())

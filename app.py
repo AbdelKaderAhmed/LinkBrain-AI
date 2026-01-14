@@ -46,24 +46,51 @@ app_mode = st.sidebar.selectbox("Select a Tool:",
     ["Profile Optimizer", "Post Generator", "Skill Advisor", "Networking Recommendations"]
 )
 
-# --- FEATURE 1: PROFILE OPTIMIZER ---
+
+# --- FEATURE 1: PROFILE OPTIMIZER (Updated View) ---
 if app_mode == "Profile Optimizer":
     st.markdown("<h1 class='main-title'>🔍 LinkedIn Profile Optimizer</h1>", unsafe_allow_html=True)
     profile_input = st.text_area("Paste your profile text here:", height=250)
     
     if st.button("Analyze My Profile"):
         if profile_input:
-            with st.spinner("Analyzing..."):
+            with st.spinner("Analyzing profile structure..."):
                 analyzer = ProfileAnalyzer()
                 result = analyzer.analyze_profile(profile_input)
+                
                 if "error" in result:
                     st.error(result["error"])
                 else:
                     # Save to Session State for Master Report
                     st.session_state['master_data']['profile'] = result
+                    
                     st.success("Analysis Complete!")
-                    st.metric("Profile Score", f"{result['score']}/100")
-                    st.write(result['summary'])
+                    
+                    # --- Display Score & Summary ---
+                    col_score, col_sum = st.columns([1, 2])
+                    with col_score:
+                        st.metric("Profile Score", f"{result.get('score', 0)}/100")
+                    with col_sum:
+                        st.subheader("📝 Professional Summary")
+                        st.write(result.get('summary', 'No summary generated.'))
+                    
+                    st.divider()
+
+                    # --- Display SWOT (Strengths & Weaknesses) ---
+                    st.subheader("⚖️ SWOT Analysis")
+                    col_left, col_right = st.columns(2)
+                    
+                    with col_left:
+                        st.markdown("#### ✅ Strengths")
+                        strengths = result.get('strengths', [])
+                        for s in strengths:
+                            st.success(s) # Uses green boxes for strengths
+                            
+                    with col_right:
+                        st.markdown("#### ⚠️ Areas for Improvement")
+                        weaknesses = result.get('weaknesses', [])
+                        for w in weaknesses:
+                            st.warning(w) # Uses yellow/orange boxes for weaknesses
         else:
             st.warning("Please provide profile text.")
 
@@ -88,27 +115,54 @@ elif app_mode == "Post Generator":
 # --- FEATURE 3: SKILL ADVISOR ---
 elif app_mode == "Skill Advisor":
     st.markdown("<h1 class='main-title'>📊 Market Skill Advisor</h1>", unsafe_allow_html=True)
+    
+    # Input Layout
     col_a, col_b = st.columns(2)
     with col_a:
-        role = st.text_input("Target Job Role:")
+        role = st.text_input("Target Job Role:", placeholder="e.g., Full Stack Developer")
     with col_b:
         lang = st.selectbox("Language:", ["English", "Arabic", "French"])
-    skills_input = st.text_area("Your Current Skills:")
+        
+    skills_input = st.text_area("Your Current Skills:", placeholder="e.g., Python, React, SQL")
 
     if st.button("Get Career Roadmap 🚀"):
         if role and skills_input:
-            with st.spinner("Generating roadmap..."):
+            with st.spinner("Generating your personalized roadmap..."):
+                # Initialize logic from brain folder
                 advisor = SkillAdvisor()
                 report = advisor.analyze_skills(skills_input, role, lang)
+                
                 if "error" in report:
                     st.error(report["error"])
                 else:
-                    # Save to Session State for Master Report
+                    # Sync data to Session State for the Master PDF Report
                     st.session_state['master_data']['roadmap'] = report
                     st.session_state['master_data']['role'] = role
+                    
                     st.success("Roadmap Ready!")
                     st.subheader(f"Analysis for {role}")
-                    st.write(report['gap_analysis'])
+                    
+                    # Display the initial Gap Analysis
+                    st.info(report.get('gap_analysis', 'No gap analysis available.'))
+                    
+                    # Display Skill Categories in columns
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        st.subheader("🛠 Technical Skills")
+                        for ts in report.get('tech_skills', []): 
+                            st.write(f"- {ts}")
+                    with c2:
+                        st.subheader("🤝 Soft Skills")
+                        for ss in report.get('soft_skills', []): 
+                            st.write(f"- {ss}")
+                    
+                    st.divider()
+                    
+                    # Display the detailed 3-Month Roadmap
+                    st.subheader("📅 3-Month Learning Plan")
+                    st.markdown(report.get('roadmap', 'No detailed roadmap generated.'))
+        else:
+            st.warning("Please fill in both the Target Role and Current Skills.")
 
 # --- FEATURE 4: NETWORKING RECOMMENDATIONS ---
 elif app_mode == "Networking Recommendations":
