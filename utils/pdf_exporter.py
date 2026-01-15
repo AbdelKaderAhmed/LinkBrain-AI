@@ -9,10 +9,13 @@ class PDFReport(FPDF):
 
     def __init__(self):
         super().__init__()
-        self.set_auto_page_break(auto=True, margin=15)
+        # Ensure your logo is placed in an 'assets' folder
+        self.logo_path = "logo.png"
         
     def header(self):
         """Sets the professional header for every page."""
+        if os.path.exists(self.logo_path):
+            self.image(self.logo_path, 7, 6, 25) # Position: x=10, y=8, width=33
         self.set_font('Helvetica', 'B', 12)
         self.set_text_color(100, 100, 100)
         self.cell(0, 10, 'LinkBrain AI - Professional Intelligence Report', ln=True, align='R')
