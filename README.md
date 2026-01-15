@@ -1,6 +1,11 @@
 # 🧠 LinkBrain AI | Career Intelligence Hub
-----
-LinkBrain AI is a professional-grade career optimization suite designed to help LinkedIn users maximize their professional impact. Powered by OpenAI's GPT-4o-mini, it analyzes profiles, generates engaging content, provides actionable skill roadmaps, and suggests networking strategies. It features an integrated AI Chatbot that acts as an executive career coach, providing personalized, context-aware guidance based on your specific professional data.
+
+**LinkBrain AI** is an AI-powered suite designed to maximize your professional impact. 
+
+- 🤖 **AI Coach:** Context-aware guidance based on your data.
+- 🔍 **Audit:** Deep LinkedIn profile & SWOT analysis.
+- 🛤️ **Growth:** Actionable skill roadmaps & networking.
+
 ---
 
 ## 🚀 Key Features
