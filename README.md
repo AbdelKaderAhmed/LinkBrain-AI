@@ -52,7 +52,7 @@
 ⚙️ Installation & Deployment
 
  1.Clone the project:
- git clone https://github.com/AbdelKaderAhmed/.git
+ git clone https://github.com/AbdelKaderAhmed/LinkBrain-AI.git
  cd LinkBrain-AI
 
 2.Setup environment:
