@@ -13,6 +13,26 @@
 * **💬 Strategic AI Concierge:** A context-aware chatbot that uses your specific profile data to provide real-time career coaching.
 * **📦 Master Career Bundle:** A unique feature that compiles all your analyses into a single, branded PDF report.
 
+
+## 📂 Project Structure
+```text
+├── app.py                # Main Application & Professional UI
+├── logo.png              # Brand Asset
+├── .env                  # Environment Variables (Secure API Keys)
+├── requirements.txt      # Dependency Manifest
+│
+├── brain/                # AI Logic Core
+│   ├── career_coach.py     # Personalized Mentor Logic
+│   ├── post_generator.py   # Content Creation Engine
+│   ├── profile_analyzer.py # SWOT & Audit Analysis
+│   └── skills_advisor.py   # Roadmap & Gap Logic
+│
+└── utils/                # Supporting Utilities
+    ├── __init__.py       # Package-level exposure for cleaner imports
+    └── pdf_exporter.py     # Document Generation Engine
+
+
+
 ---
 
 ## 🛠️ Tech Stack
@@ -25,16 +45,20 @@
 
 ---
 
-## 📂 Project Structure
+⚙️ Installation & Deployment
 
-```text
-├── app.py                # Main Streamlit application
-├── brain/                # AI Logic Modules
-│   ├── profile_analyzer.py
-│   ├── skills_advisor.py
-│   ├── post_generator.py
-│   └── network_advisor.py
-├── utils/                # Helper Utilities
-│   └── pdf_exporter.py   # PDF generation engine
-├── logo.png              # App Branding
-└── requirements.txt      # Dependencies
+ 1.Clone the project:
+ git clone https://github.com/AbdelKaderAhmed/.git
+ cd LinkBrain-AI
+
+2.Setup environment:
+pip install -r requirements.txt
+
+3.Configure API Key: Add your OPENAI_API_KEY to a .env file in the root directory.
+
+4.Run the Dashboard:
+streamlit run app.py
+
+
+👨‍💻 Developer
+Abdel Kader Ahmed Junior AI Engineer 
