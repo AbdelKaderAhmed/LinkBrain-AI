@@ -33,15 +33,56 @@ if 'master_data' not in st.session_state:
         'role': ""
     }
 
-# 3. Global Styling (CSS)
+st.set_page_config(page_title="LinkBrain AI", page_icon="🧠", layout="wide")
+
+# Custom CSS for Professional Branding
 st.markdown("""
     <style>
-    .rtl-text { direction: rtl; text-align: right; font-family: 'Tahoma', sans-serif; }
-    .main-title { text-align: center; color: #0A66C2; }
-    .stButton>button { width: 100%; border-radius: 5px; background-color: #0A66C2; color: white; }
-    </style>
-    """, unsafe_allow_html=True)
+    /* Main Background & Fonts */
+    .stApp {
+        background-color: black; /* LinkedIn light gray background */
+    }
+    
+    /* Sidebar Styling */
+    section[data-testid="stSidebar"] {
+        background-color: black;
+        border-right: 1px solid #e0e0e0;
+    }
 
+    /* Professional Titles */
+    .main-title {
+        color: #0a66c2;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-weight: 700;
+        text-align: center;
+        padding: 20px;
+    }
+
+    /* Card-style containers for features */
+    .stCard {
+        background-color: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border: 1px solid #e0e0e0;
+        margin-bottom: 20px;
+    }
+
+    /* Buttons Styling */
+    .stButton>button {
+        width: 100%;
+        border-radius: 25px;
+        border: 1px solid #0a66c2;
+        background-color: white;
+        color: #0a66c2;
+        transition: 0.3s;
+    }
+    .stButton>button:hover {
+        background-color: #0a66c2;
+        color: white;
+    }
+    </style>
+""", unsafe_allow_html=True)
 # 4. Sidebar Navigation
 st.sidebar.markdown("<h2 style='text-align: center;'>🧠 LinkBrain Menu</h2>", unsafe_allow_html=True)
 app_mode = st.sidebar.selectbox("Select a Tool:", 
