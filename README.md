@@ -1,5 +1,8 @@
 # 🧠 LinkBrain AI | Career Intelligence Hub
-(https://linkbrain-ai.streamlit.app/)[🚀 View Live Demo]
+
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://linkbrain-ai.streamlit.app/)
+
+> **Elevate your career with AI-powered insights.** > [🚀 View Live Demo](https://linkbrain-ai.streamlit.app/) | [📁 Source Code](https://github.com/AbdelKaderAhmed/LinkBrain-AI)
 
 **LinkBrain AI** is an AI-powered suite designed to maximize your professional impact. 
 
