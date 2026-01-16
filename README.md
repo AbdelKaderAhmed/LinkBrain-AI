@@ -1,4 +1,5 @@
 # 🧠 LinkBrain AI | Career Intelligence Hub
+(https://linkbrain-ai.streamlit.app/)[🚀 View Live Demo]
 
 **LinkBrain AI** is an AI-powered suite designed to maximize your professional impact. 
 
