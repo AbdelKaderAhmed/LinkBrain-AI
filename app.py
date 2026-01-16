@@ -23,6 +23,17 @@ st.set_page_config(
     layout="wide"
 )
 
+with st.sidebar:
+    st.divider()  # Visual separator for better organization
+    
+    if st.button("🔄 Reset Application", use_container_width=True):
+        # Clear all data stored in the current session state
+        for key in st.session_state.keys():
+            del st.session_state[key]
+        
+        # Immediately restart the application to reflect changes
+        st.rerun()
+
 # 2. Initialize Session State for Master Report
 # This keeps data alive when switching between sidebar menu options
 if 'master_data' not in st.session_state:
