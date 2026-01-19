@@ -3,3 +3,4 @@ venv/
 __pycache__/
 *.pyc
 .streamlit/
+_linkbrain_admin.db
