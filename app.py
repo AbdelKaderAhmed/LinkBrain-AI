@@ -2,6 +2,9 @@ import streamlit as st
 from dotenv import load_dotenv
 import os
 
+import time
+from database import log_performance
+
 # Import custom modules from the brain folder
 from brain.profile_analyzer import ProfileAnalyzer
 from brain.post_generator import PostGenerator
@@ -107,6 +110,7 @@ if app_mode == "Profile Optimizer":
     profile_input = st.text_area("Paste your profile text here:", height=250)
     
     if st.button("Analyze My Profile"):
+        start_time = time.time()
         if profile_input:
             with st.spinner("Analyzing profile structure..."):
                 analyzer = ProfileAnalyzer()
@@ -147,6 +151,10 @@ if app_mode == "Profile Optimizer":
                             st.warning(w) # Uses yellow/orange boxes for weaknesses
         else:
             st.warning("Please provide profile text.")
+        end_time = time.time() # 
+        latency = round(end_time - start_time, 2)
+        
+
 
 # --- FEATURE 2: POST GENERATOR ---
 elif app_mode == "Post Generator":
@@ -160,11 +168,29 @@ elif app_mode == "Post Generator":
     
     if st.button("Generate Post ✨"):
         if topic:
+            start_time = time.time()
+
             with st.spinner("Writing..."):
-                gen = PostGenerator()
-                post_content = gen.generate_post(topic, tone, language)
-                dir_class = "rtl-text" if language == "Arabic" else ""
-                st.markdown(f'<div class="{dir_class}">{post_content}</div>', unsafe_allow_html=True)
+                try:
+                    gen = PostGenerator()
+                    post_content = gen.generate_post(topic, tone, language)
+                    
+                    # 2. 
+                    latency = round(time.time() - start_time, 2)
+                    
+                    # 3. 
+                    log_performance("Post Generator", latency, "Success", len(topic))
+                    
+                    dir_class = "rtl-text" if language == "Arabic" else ""
+                    st.markdown(f'<div class="{dir_class}">{post_content}</div>', unsafe_allow_html=True)
+                    st.success(f"Generated in {latency}s") # اختياري: إظهار السرعة للمطور
+                    
+                except Exception as e:
+                    # 4. تسجيل الفشل في حال حدوث خطأ
+                    log_performance("Post Generator", 0, f"Error: {str(e)[:20]}", len(topic))
+                    st.error(f"An error occurred: {e}")
+        else:
+            st.warning("Please provide a topic.")
 
 # --- FEATURE 3: SKILL ADVISOR ---
 elif app_mode == "Skill Advisor":
@@ -181,40 +207,56 @@ elif app_mode == "Skill Advisor":
 
     if st.button("Get Career Roadmap 🚀"):
         if role and skills_input:
+            start_time = time.time()
+            
             with st.spinner("Generating your personalized roadmap..."):
-                # Initialize logic from brain folder
-                advisor = SkillAdvisor()
-                report = advisor.analyze_skills(skills_input, role, lang)
-                
-                if "error" in report:
-                    st.error(report["error"])
-                else:
-                    # Sync data to Session State for the Master PDF Report
-                    st.session_state['master_data']['roadmap'] = report
-                    st.session_state['master_data']['role'] = role
+                try:
+                    # Initialize logic from brain folder
+                    advisor = SkillAdvisor()
+                    report = advisor.analyze_skills(skills_input, role, lang)
                     
-                    st.success("Roadmap Ready!")
-                    st.subheader(f"Analysis for {role}")
+                    # 2. حساب الوقت المستغرق
+                    latency = round(time.time() - start_time, 2)
                     
-                    # Display the initial Gap Analysis
-                    st.info(report.get('gap_analysis', 'No gap analysis available.'))
-                    
-                    # Display Skill Categories in columns
-                    c1, c2 = st.columns(2)
-                    with c1:
-                        st.subheader("🛠 Technical Skills")
-                        for ts in report.get('tech_skills', []): 
-                            st.write(f"- {ts}")
-                    with c2:
-                        st.subheader("🤝 Soft Skills")
-                        for ss in report.get('soft_skills', []): 
-                            st.write(f"- {ss}")
-                    
-                    st.divider()
-                    
-                    # Display the detailed 3-Month Roadmap
-                    st.subheader("📅 3-Month Learning Plan")
-                    st.markdown(report.get('roadmap', 'No detailed roadmap generated.'))
+                    if "error" in report:
+                        # 
+                        log_performance("Skill Advisor", latency, "Error", len(skills_input))
+                        st.error(report["error"])
+                    else:
+                        # 3. 
+                        log_performance("Skill Advisor", latency, "Success", len(skills_input))
+                        
+                        # Sync data to Session State for the Master PDF Report
+                        st.session_state['master_data']['roadmap'] = report
+                        st.session_state['master_data']['role'] = role
+                        
+                        st.success(f"Roadmap Ready! (Processed in {latency}s)")
+                        st.subheader(f"Analysis for {role}")
+                        
+                        # Display the initial Gap Analysis
+                        st.info(report.get('gap_analysis', 'No gap analysis available.'))
+                        
+                        # Display Skill Categories in columns
+                        c1, c2 = st.columns(2)
+                        with c1:
+                            st.subheader("🛠 Technical Skills")
+                            for ts in report.get('tech_skills', []): 
+                                st.write(f"- {ts}")
+                        with c2:
+                            st.subheader("🤝 Soft Skills")
+                            for ss in report.get('soft_skills', []): 
+                                st.write(f"- {ss}")
+                        
+                        st.divider()
+                        
+                        # Display the detailed 3-Month Roadmap
+                        st.subheader("📅 3-Month Learning Plan")
+                        st.markdown(report.get('roadmap', 'No detailed roadmap generated.'))
+                        
+                except Exception as e:
+                    # تسجيل أي انهيار مفاجئ في النظام
+                    log_performance("Skill Advisor", 0, f"Crash: {str(e)[:20]}", len(skills_input))
+                    st.error(f"System Error: {e}")
         else:
             st.warning("Please fill in both the Target Role and Current Skills.")
 
@@ -225,18 +267,38 @@ elif app_mode == "Networking Recommendations":
     
     if st.button("Generate Recommendations"):
         if user_input:
-            with st.spinner("Searching leaders..."):
-                advisor = NetworkAdvisor()
-                results = advisor.get_recommendations(user_input)
-                if "error" in results:
-                    st.error(results["error"])
-                else:
-                    # Save to Session State for Master Report
-                    st.session_state['master_data']['networking'] = results
-                    st.success("Leaders Found!")
-                    for person in results.get("recommendations", []):
-                        st.write(person)
 
+            start_time = time.time()
+            
+            with st.spinner("Searching leaders..."):
+                try:
+                    advisor = NetworkAdvisor()
+                    results = advisor.get_recommendations(user_input)
+                    
+                    # 2.
+                    latency = round(time.time() - start_time, 2)
+                    
+                    if "error" in results:
+                        # 
+                        log_performance("Networking Advisor", latency, f"Error: {results['error'][:15]}", len(user_input))
+                        st.error(results["error"])
+                    else:
+                        # 3.
+                        log_performance("Networking Advisor", latency, "Success", len(user_input))
+                        
+                        # Save to Session State for Master Report
+                        st.session_state['master_data']['networking'] = results
+                        st.success(f"Leaders Found! (in {latency}s)")
+                        
+                        for person in results.get("recommendations", []):
+                            st.write(person)
+                            
+                except Exception as e:
+                    # 
+                    log_performance("Networking Advisor", 0, f"Crash: {str(e)[:15]}", len(user_input))
+                    st.error(f"System Error: {e}")
+        else:
+            st.warning("Please provide input text.")
 # --- MASTER REPORT SIDEBAR LOGIC ---
 st.sidebar.markdown("---")
 st.sidebar.subheader("🎓 Master Career Bundle")
@@ -246,11 +308,30 @@ st.sidebar.progress(completed / 3)
 
 if completed == 3:
     if st.sidebar.button("📦 Build Master Report"):
-        pdf_tool = PDFReport()
-        master_pdf = pdf_tool.generate_master_report(st.session_state['master_data'])
-        st.sidebar.download_button("📥 Download Full Bundle", master_pdf, "Full_Career_Audit.pdf")
+        start_time = time.time()
+        
+        with st.spinner("Generating PDF Bundle..."):
+            try:
+                pdf_tool = PDFReport()
+                master_pdf = pdf_tool.generate_master_report(st.session_state['master_data'])
+                
+                # 2.
+                latency = round(time.time() - start_time, 2)
+                
+                # 3. 
+                log_performance("Master PDF Report", latency, "Success", 100) # 100 كقيمة افتراضية للحجم
+                
+                st.sidebar.download_button("📥 Download Full Bundle", master_pdf, "Full_Career_Audit.pdf")
+                st.sidebar.success(f"Report Generated in {latency}s")
+                
+            except Exception as e:
+                # تسجيل الفشل إذا حدث خطأ في مكتبة الـ PDF
+                log_performance("Master PDF Report", 0, f"PDF Error: {str(e)[:15]}", 0)
+                st.sidebar.error("Failed to build PDF.")
+
 elif completed > 0:
     st.sidebar.info(f"Complete {3-completed} more sections to unlock the Master Report.")
+
 
 # --- PROFESSIONAL FLOATING-STYLE CHATBOT ---
 
@@ -293,38 +374,47 @@ with col2:
     with st.expander("🧠 LinkBrain Assistant", expanded=False):
         st.markdown("<div class='chat-header'>🧠 Executive AI Coach</div>", unsafe_allow_html=True)
         
-        # Initialize session state for messages
         if "messages" not in st.session_state:
             st.session_state.messages = []
 
-        # Chat display area with fixed height
         chat_box = st.container(height=350)
 
-        # Show message history
         for msg in st.session_state.messages:
             avatar = "👤" if msg["role"] == "user" else "🧠"
             with chat_box.chat_message(msg["role"], avatar=avatar):
                 st.markdown(msg["content"])
 
-        # Chat Input
         if chat_input := st.chat_input("Type your message..."):
-            # Add user message
+            # 1. ابدأ التوقيت عند إرسال المستخدم للرسالة
+            import time
+            from database import log_performance
+            start_time = time.time()
+            
             st.session_state.messages.append({"role": "user", "content": chat_input})
             with chat_box.chat_message("user", avatar="👤"):
                 st.markdown(chat_input)
 
-            # AI Response Logic
             with st.spinner("Analyzing..."):
-                context = st.session_state.get('master_data', {}).get('profile')
-                coach = CareerCoach()
-                response = coach.get_response(st.session_state.messages, context_data=context)
-            
-            # Add AI message
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            with chat_box.chat_message("assistant", avatar="🧠"):
-                st.markdown(response)
-        
-        # Reset Button inside the chat for convenience
+                try:
+                    context = st.session_state.get('master_data', {}).get('profile')
+                    coach = CareerCoach()
+                    response = coach.get_response(st.session_state.messages, context_data=context)
+                    
+                    # 2. حساب وقت الاستجابة
+                    latency = round(time.time() - start_time, 2)
+                    
+                    # 3. تسجيل الأداء في لوحة المطور
+                    log_performance("AI Coach Chat", latency, "Success", len(chat_input))
+                    
+                    st.session_state.messages.append({"role": "assistant", "content": response})
+                    with chat_box.chat_message("assistant", avatar="🧠"):
+                        st.markdown(response)
+                        
+                except Exception as e:
+                    # تسجيل الفشل في حال انقطاع الـ API أثناء المحادثة
+                    log_performance("AI Coach Chat", 0, f"Chat Error: {str(e)[:15]}", len(chat_input))
+                    st.error("I'm having trouble thinking right now. Please try again.")
+
         if st.button("Clear Conversation", use_container_width=True):
             st.session_state.messages = []
             st.rerun()
