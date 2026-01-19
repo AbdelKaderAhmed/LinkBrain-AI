@@ -1,6 +1,8 @@
-streamlit
-openai
-python-dotenv
-tiktoken
-tenacity
+streamlit==1.53.0
+openai==2.15.0
+python-dotenv==1.2.1
+pandas==2.3.3
+plotly==6.5.2
+numpy==2.4.1
+tiktoken==0.12.0
 fpdf2
