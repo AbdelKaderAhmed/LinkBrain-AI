@@ -20,22 +20,23 @@
 * **🌐 Networking Advisor:** Identifies and recommends industry leaders and influencers to follow for strategic career growth.
 * **💬 Strategic AI Concierge:** A context-aware chatbot that uses your specific profile data to provide real-time career coaching.
 * **📦 Master Career Bundle:** A unique feature that compiles all your analyses into a single, branded PDF report.
-
+* **📈 Developer Performance Suite: (Internal) Real-time tracking of AI latency, status codes, and token usage via a dedicated dashboard.
 
 ## 📂 Project Structure
 ```text
-├── app.py                # Main Application & Professional UI
-├── logo.png              # Brand Asset
-├── .env                  # Environment Variables (Secure API Keys)
-├── requirements.txt      # Dependency Manifest
+├── app.py                  # Main Application & User Interface
+├── database.py             # SQLite Performance Logging Engine
+├── dev_dashboard.py        # Analytics Dashboard for Developers
+├── requirements.txt        # Project Dependencies
+├── .env                    # Environment Variables (Secure)
 │
-├── brain/                # AI Logic Core
+├── brain/                  # AI Logic Core
 │   ├── career_coach.py     # Personalized Mentor Logic
 │   ├── post_generator.py   # Content Creation Engine
 │   ├── profile_analyzer.py # SWOT & Audit Analysis
 │   └── skills_advisor.py   # Roadmap & Gap Logic
 │
-└── utils/                # Supporting Utilities
+└── utils/                  # Supporting Utilities
     ├── __init__.py       # Package-level exposure for cleaner imports
     └── pdf_exporter.py     # Document Generation Engine
 
@@ -48,6 +49,8 @@
 - **Frontend:** [Streamlit](https://streamlit.io/)
 - **AI Engine:** [OpenAI GPT-4o-mini](https://openai.com/)
 - **Backend Logic:** Python 3.x
+- **Database: SQLite (Local Performance Logs)
+- **Visualization: Pandas & Plotly
 - **PDF Generation:** FPDF
 - **Environment Management:** Python-Dotenv
 
