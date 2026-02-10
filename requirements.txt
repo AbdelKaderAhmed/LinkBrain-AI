@@ -1,17 +1,9 @@
-# Core Web Framework
-streamlit==1.41.0
-
-# AI Engine (Groq uses the OpenAI compatible SDK)
-openai==1.59.0
-
-# Environment & Security
+streamlit==1.53.0
+openai==1.59.9
+groq==0.18.0
 python-dotenv==1.0.1
 tenacity==9.0.0
-
-# Data Analysis & Visualization
 pandas==2.2.2
 numpy==1.26.4
 plotly==5.24.1
-
-# Document Generation
-fpdf2==2.8.1
+fpdf2==2.8.5
