@@ -1,40 +1,62 @@
 import os
+import streamlit as st
 import json
 from openai import OpenAI
 from dotenv import load_dotenv
 
-# Initialize environment variables
+# Initialize environment variables for local development access
 load_dotenv()
 
 class SkillAdvisor:
-    """Analyzes skill gaps and provides career development advice using Groq Llama models."""
+    """
+    Analyzes skill gaps and provides career development advice using Groq Llama models.
+    Supports English, Arabic, and French.
+    """
     
     def __init__(self):
-        # Securely fetch Groq API key from environment
-        self.api_key = os.getenv("GROQ_API_KEY")
+        # 1. Initialize attributes to None to prevent "no attribute 'client'" errors
+        self.client = None
+        self.api_key = None
+        self.model = "llama-3.3-70b-versatile"
+
+        # 2. Securely fetch the API key with fallback logic (Cloud -> Local)
+        try:
+            # Check if running on Streamlit Cloud (using Secrets)
+            if hasattr(st, "secrets") and "GROQ_API_KEY" in st.secrets:
+                self.api_key = st.secrets["GROQ_API_KEY"]
+            else:
+                # Fallback to local .env environment variable
+                self.api_key = os.getenv("GROQ_API_KEY")
+        except Exception:
+            # Final fallback to os.getenv if st.secrets triggers an error locally
+            self.api_key = os.getenv("GROQ_API_KEY")
+
+        # 3. Validate key existence before proceeding
         if not self.api_key:
-            raise ValueError("GROQ_API_KEY is missing in .env")
-        
-        # Pointing to Groq API instead of OpenAI
+            raise ValueError("CRITICAL: GROQ_API_KEY is missing. Add it to .env (local) or Secrets (cloud).")
+
+        # 4. Initialize the OpenAI client pointing to Groq's API
         self.client = OpenAI(
             api_key=self.api_key,
             base_url="https://api.groq.com/openai/v1"
         )
-        
-        # Llama 3.3 70B is highly capable of structured reasoning and roadmaps
-        self.model = "llama-3.3-70b-versatile"
 
     def analyze_skills(self, current_skills: str, target_role: str, language: str) -> dict:
         """
         Compares current skills with a target job role and suggests missing skills.
-        Supports English, Arabic, and French.
+        Returns a structured JSON object.
         """
+        # Safety check: ensure the AI client was initialized correctly
+        if not self.client:
+            return {"error": "AI Client not initialized. Please check system configuration."}
         
+        # System personality and instruction for strict JSON output
         system_msg = (
             f"You are a Career Path Advisor. Analyze the user's skills for the role of {target_role}. "
             f"Respond in {language}. Return ONLY a valid JSON object."
         )
         
+        # Structured user query for the model
         user_msg = f"""
         Target Role: {target_role}
         My Current Skills: {current_skills}
@@ -49,7 +71,7 @@ class SkillAdvisor:
         """
 
         try:
-            # API call to Groq model with JSON response format
+            # Execute API call with JSON mode enabled
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -59,11 +81,12 @@ class SkillAdvisor:
                 response_format={"type": "json_object"}
             )
             
-            # Parse the string response into a Python dictionary
+            # Parse the text response into a Python dictionary
             return json.loads(response.choices[0].message.content)
         except Exception as e:
+            # Professional fallback error reporting
             return {"error": f"Skill analysis failed via Groq: {str(e)}"}
 
 if __name__ == "__main__":
-    # Internal module test
+    # Module testing entry point
     print("SkillAdvisor module ready with Groq (Llama 70B).")
