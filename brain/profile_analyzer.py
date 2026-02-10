@@ -9,17 +9,24 @@ load_dotenv()
 
 class ProfileAnalyzer:
     """
-    Core engine to analyze LinkedIn profiles using OpenAI GPT models.
+    Core engine to analyze LinkedIn profiles using Groq Llama models.
     Supports English, Arabic, and French.
     """
     
     def __init__(self):
-        # Securely get the API key
-        self.api_key = os.getenv("OPENAI_API_KEY")
+        # Securely get the Groq API key
+        self.api_key = os.getenv("GROQ_API_KEY")
         if not self.api_key:
-            raise ValueError("CRITICAL ERROR: OPENAI_API_KEY is not set in .env file.")
+            raise ValueError("CRITICAL ERROR: GROQ_API_KEY is not set in .env file.")
         
-        self.client = OpenAI(api_key=self.api_key)
+        # Pointing the client to Groq's infrastructure
+        self.client = OpenAI(
+            api_key=self.api_key,
+            base_url="https://api.groq.com/openai/v1"
+        )
+        
+        # Using Llama 3.3 70B for high-quality professional analysis
+        self.model = "llama-3.3-70b-versatile"
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=6))
     def analyze_profile(self, profile_text: str) -> dict:
@@ -53,7 +60,7 @@ class ProfileAnalyzer:
 
         try:
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model=self.model,
                 messages=[
                     {"role": "system", "content": system_msg},
                     {"role": "user", "content": user_msg}
@@ -65,8 +72,9 @@ class ProfileAnalyzer:
             return json.loads(response.choices[0].message.content)
             
         except Exception as e:
-            return {"error": f"AI Analysis failed: {str(e)}"}
+            # Handle API-specific errors (like rate limits or quota)
+            return {"error": f"Groq Analysis failed: {str(e)}"}
 
 if __name__ == "__main__":
     # Internal module test
-    print("ProfileAnalyzer module ready.")
+    print("ProfileAnalyzer module ready with Groq integration.")

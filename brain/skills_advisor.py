@@ -7,15 +7,22 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class SkillAdvisor:
-    """Analyzes skill gaps and provides career development advice."""
+    """Analyzes skill gaps and provides career development advice using Groq Llama models."""
     
     def __init__(self):
-        # Securely fetch API key from environment
-        self.api_key = os.getenv("OPENAI_API_KEY")
+        # Securely fetch Groq API key from environment
+        self.api_key = os.getenv("GROQ_API_KEY")
         if not self.api_key:
-            raise ValueError("OPENAI_API_KEY is missing in .env")
+            raise ValueError("GROQ_API_KEY is missing in .env")
         
-        self.client = OpenAI(api_key=self.api_key)
+        # Pointing to Groq API instead of OpenAI
+        self.client = OpenAI(
+            api_key=self.api_key,
+            base_url="https://api.groq.com/openai/v1"
+        )
+        
+        # Llama 3.3 70B is highly capable of structured reasoning and roadmaps
+        self.model = "llama-3.3-70b-versatile"
 
     def analyze_skills(self, current_skills: str, target_role: str, language: str) -> dict:
         """
@@ -42,14 +49,21 @@ class SkillAdvisor:
         """
 
         try:
+            # API call to Groq model with JSON response format
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model=self.model,
                 messages=[
                     {"role": "system", "content": system_msg},
                     {"role": "user", "content": user_msg}
                 ],
                 response_format={"type": "json_object"}
             )
+            
+            # Parse the string response into a Python dictionary
             return json.loads(response.choices[0].message.content)
         except Exception as e:
-            return {"error": f"Skill analysis failed: {str(e)}"}
+            return {"error": f"Skill analysis failed via Groq: {str(e)}"}
+
+if __name__ == "__main__":
+    # Internal module test
+    print("SkillAdvisor module ready with Groq (Llama 70B).")

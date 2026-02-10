@@ -47,7 +47,7 @@
 ## 🛠️ Tech Stack
 
 - **Frontend:** [Streamlit](https://streamlit.io/)
-- **AI Engine:** [OpenAI GPT-4o-mini](https://openai.com/)
+- **AI Engine:** Llama 3.3 70B (Reasoning) & Llama 3.1 8B (Content)
 - **Backend Logic:** Python 3.x
 - **Database: SQLite (Local Performance Logs)
 - **Visualization: Pandas & Plotly
@@ -65,7 +65,8 @@
 2.Setup environment:
 pip install -r requirements.txt
 
-3.Configure API Key: Add your OPENAI_API_KEY to a .env file in the root directory.
+3.Configure API Key: Create a .env file and add your Groq API Key:
+GROQ_API_KEY=your_gsk_key_here
 
 4.Run the Dashboard:
 streamlit run app.py

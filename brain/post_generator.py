@@ -6,15 +6,22 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class PostGenerator:
-    """Handles LinkedIn content generation using OpenAI models."""
+    """Handles LinkedIn content generation using Groq Llama models."""
     
     def __init__(self):
-        # Securely fetch API key from environment
-        self.api_key = os.getenv("OPENAI_API_KEY")
+        # Securely fetch Groq API key from environment
+        self.api_key = os.getenv("GROQ_API_KEY")
         if not self.api_key:
-            raise ValueError("OPENAI_API_KEY is not configured in .env")
+            raise ValueError("GROQ_API_KEY is not configured in .env")
         
-        self.client = OpenAI(api_key=self.api_key)
+        # Pointing to Groq API
+        self.client = OpenAI(
+            api_key=self.api_key,
+            base_url="https://api.groq.com/openai/v1"
+        )
+        
+        # Llama 3.1 8B is perfect for fast content generation
+        self.model = "llama-3.1-8b-instant"
 
     def generate_post(self, topic: str, tone: str, language: str) -> str:
         """
@@ -32,9 +39,9 @@ class PostGenerator:
         user_msg = f"Write a LinkedIn post about the following topic: {topic}. Include 3-5 relevant hashtags."
 
         try:
-            # API call to OpenAI GPT model
+            # API call to Groq model
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model=self.model,
                 messages=[
                     {"role": "system", "content": system_msg},
                     {"role": "user", "content": user_msg}
@@ -44,3 +51,7 @@ class PostGenerator:
             return response.choices[0].message.content
         except Exception as e:
             return f"Error during post generation: {str(e)}"
+
+if __name__ == "__main__":
+    # Internal module test
+    print("PostGenerator module ready with Groq (Llama 8B).")
